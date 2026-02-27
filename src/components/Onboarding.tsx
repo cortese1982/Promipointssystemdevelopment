@@ -2,40 +2,27 @@ import { useState } from 'react';
 import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Award, Gift, TrendingUp, CheckCircle2, ArrowRight, X } from 'lucide-react';
+import { storage } from '../utils/storage';
 
 interface OnboardingProps {
   onComplete: () => void;
 }
 
-const steps = [
-  {
-    icon: Award,
-    title: '¡Bienvenido a PromiPoints!',
-    description: 'Sistema de reconocimiento entre colaboradores de Grupo Prominente',
-    details: 'Reconoce el trabajo excepcional de tus compañeros y fortalece la cultura organizacional.',
-  },
-  {
-    icon: Gift,
-    title: '10 Puntos Mensuales',
-    description: 'Cada mes recibes 10 PromiPoints para compartir',
-    details: 'Los puntos no utilizados expiran al final del mes, así que ¡no olvides reconocer a tus compañeros!',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Asignación Anónima',
-    description: 'Reconoce valores organizacionales de forma privada',
-    details: 'Tus compañeros verán los puntos recibidos y la categoría, pero no sabrán quién los envió.',
-  },
-  {
-    icon: CheckCircle2,
-    title: '¡Estás listo!',
-    description: 'Comienza a reconocer el gran trabajo de tu equipo',
-    details: 'Haz clic en "Asignar PromiPoints" para dar tu primer reconocimiento.',
-  },
-];
-
 export function Onboarding({ onComplete }: OnboardingProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  
+  // Get onboarding steps from system config
+  const config = storage.getSystemConfig();
+  const steps = config.onboardingSteps || [];
+  
+  // If no steps configured, use defaults
+  if (steps.length === 0) {
+    onComplete();
+    return null;
+  }
+  
+  // Icons for each step (static, not editable)
+  const icons = [Award, Gift, TrendingUp, CheckCircle2];
 
   const handleNext = () => {
     if (currentStep === steps.length - 1) {
@@ -49,7 +36,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     onComplete();
   };
 
-  const CurrentIcon = steps[currentStep].icon;
+  const CurrentIcon = icons[currentStep] || Award;
 
   return (
     <Dialog open onOpenChange={handleSkip}>

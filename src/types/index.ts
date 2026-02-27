@@ -2,7 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'employee' | 'people';
+  role: 'employee' | 'people' | 'superadmin';
   department: string;
 }
 
@@ -33,3 +33,42 @@ export type Category =
   | 'Excelencia'
   | 'Actitud positiva'
   | 'Comunicación efectiva';
+
+export interface CategoryConfig {
+  name: string;
+  enabled: boolean;
+}
+
+export interface LoginContent {
+  title: string;
+  subtitle: string;
+  description: string;
+  helpEmail: string;
+}
+
+export interface OnboardingStep {
+  title: string;
+  description: string;
+  details: string;
+}
+
+export interface EmailNotificationConfig {
+  enabled: boolean;
+  notifyEmployee: boolean; // Notificar al colaborador cuando recibe puntos
+  notifyPeople: boolean; // Notificar al equipo de People
+  peopleEmails: string[]; // Lista de emails del equipo de People
+  smtpProvider: 'gmail' | 'outlook' | 'sendgrid' | 'custom';
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword: string;
+  fromEmail: string;
+  fromName: string;
+}
+
+export interface SystemConfig {
+  categories: CategoryConfig[];
+  loginContent: LoginContent;
+  onboardingSteps: OnboardingStep[];
+  emailNotifications: EmailNotificationConfig;
+}

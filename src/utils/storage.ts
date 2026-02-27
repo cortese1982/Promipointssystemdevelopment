@@ -1,16 +1,71 @@
-import { User, MonthlyAllocation, PointAssignment } from '../types';
+import { User, MonthlyAllocation, PointAssignment, SystemConfig, CategoryConfig } from '../types';
 
 const STORAGE_KEYS = {
   CURRENT_USER: 'promipoints_current_user',
   USERS: 'promipoints_users',
   ALLOCATIONS: 'promipoints_allocations',
   ASSIGNMENTS: 'promipoints_assignments',
+  SYSTEM_CONFIG: 'promipoints_system_config',
 };
 
 export const getCurrentMonth = (): string => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 };
+
+const getDefaultConfig = (): SystemConfig => ({
+  categories: [
+    { name: 'Trabajo en equipo', enabled: true },
+    { name: 'Innovación', enabled: true },
+    { name: 'Liderazgo', enabled: true },
+    { name: 'Colaboración', enabled: true },
+    { name: 'Compromiso', enabled: true },
+    { name: 'Excelencia', enabled: true },
+    { name: 'Actitud positiva', enabled: true },
+    { name: 'Comunicación efectiva', enabled: true },
+  ],
+  loginContent: {
+    title: 'PromiPoints',
+    subtitle: 'Grupo Prominente',
+    description: 'Sistema de reconocimiento de Grupo Prominente',
+    helpEmail: 'people@grupoprominente.com',
+  },
+  onboardingSteps: [
+    {
+      title: '¡Bienvenido a PromiPoints!',
+      description: 'Sistema de reconocimiento entre colaboradores de Grupo Prominente',
+      details: 'Reconoce el trabajo excepcional de tus compañeros y fortalece la cultura organizacional.',
+    },
+    {
+      title: '10 Puntos Mensuales',
+      description: 'Cada mes recibes 10 PromiPoints para compartir',
+      details: 'Los puntos no utilizados expiran al final del mes, así que ¡no olvides reconocer a tus compañeros!',
+    },
+    {
+      title: 'Asignación Anónima',
+      description: 'Reconoce valores organizacionales de forma privada',
+      details: 'Tus compañeros verán los puntos recibidos y la categoría, pero no sabrán quién los envió.',
+    },
+    {
+      title: '¡Estás listo!',
+      description: 'Comienza a reconocer el gran trabajo de tu equipo',
+      details: 'Haz clic en "Asignar PromiPoints" para dar tu primer reconocimiento.',
+    },
+  ],
+  emailNotifications: {
+    enabled: false,
+    notifyEmployee: true,
+    notifyPeople: false,
+    peopleEmails: [],
+    smtpProvider: 'gmail',
+    smtpHost: 'smtp.gmail.com',
+    smtpPort: 587,
+    smtpUser: '',
+    smtpPassword: '',
+    fromEmail: 'noreply@grupoprominente.com',
+    fromName: 'PromiPoints - Grupo Prominente',
+  },
+});
 
 export const storage = {
   // Current User
@@ -105,6 +160,30 @@ export const storage = {
     
     return allocation;
   },
+
+  // System Config
+  getSystemConfig: (): SystemConfig => {
+    const data = localStorage.getItem(STORAGE_KEYS.SYSTEM_CONFIG);
+    const config = data ? JSON.parse(data) : getDefaultConfig();
+    
+    // Ensure backward compatibility - add missing fields from default config
+    const defaultConfig = getDefaultConfig();
+    if (!config.onboardingSteps) {
+      config.onboardingSteps = defaultConfig.onboardingSteps;
+    }
+    if (!config.loginContent) {
+      config.loginContent = defaultConfig.loginContent;
+    }
+    if (!config.emailNotifications) {
+      config.emailNotifications = defaultConfig.emailNotifications;
+    }
+    
+    return config;
+  },
+
+  setSystemConfig: (config: SystemConfig) => {
+    localStorage.setItem(STORAGE_KEYS.SYSTEM_CONFIG, JSON.stringify(config));
+  },
 };
 
 // Initialize demo users on first load
@@ -113,6 +192,13 @@ export const initializeDemoData = () => {
   
   if (existingUsers.length === 0) {
     const demoUsers: User[] = [
+      {
+        id: 'admin',
+        name: 'Admin Sistema',
+        email: 'admin@sistema.local',
+        role: 'superadmin',
+        department: 'Administración',
+      },
       {
         id: '1',
         name: 'María García',

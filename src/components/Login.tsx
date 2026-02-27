@@ -18,6 +18,10 @@ export function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Get login content from system config
+  const config = storage.getSystemConfig();
+  const { title, subtitle, description, helpEmail } = config.loginContent;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,14 +31,22 @@ export function Login({ onLogin }: LoginProps) {
     // Simular delay de autenticación
     await new Promise(resolve => setTimeout(resolve, 800));
 
+    const users = storage.getUsers();
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+    // Allow superadmin to login without corporate email validation
+    if (user && user.role === 'superadmin') {
+      storage.ensureMonthlyAllocation(user.id);
+      onLogin(user);
+      return;
+    }
+
+    // Regular users must use corporate email
     if (!email.endsWith('@grupoprominente.com')) {
       setError('Debes usar tu correo corporativo (@grupoprominente.com)');
       setIsLoading(false);
       return;
     }
-
-    const users = storage.getUsers();
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
     if (!user) {
       setError('Usuario no encontrado en la nómina. Contacta a People & Culture para obtener acceso.');
@@ -82,11 +94,11 @@ export function Login({ onLogin }: LoginProps) {
                 </div>
               </motion.div>
               <div>
-                <CardTitle className="text-3xl mb-2">PromiPoints</CardTitle>
+                <CardTitle className="text-3xl mb-2">{title}</CardTitle>
                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
                   <Building2 className="w-4 h-4" />
                   <CardDescription>
-                    Sistema de reconocimiento de Grupo Prominente
+                    {description}
                   </CardDescription>
                 </div>
               </div>
@@ -182,6 +194,24 @@ export function Login({ onLogin }: LoginProps) {
                   <Button
                     type="button"
                     variant="outline"
+                    onClick={() => handleDemoLogin('admin@sistema.local')}
+                    className="w-full justify-start h-12 hover:bg-accent hover:border-amber-500/30 transition-all group"
+                    disabled={isLoading}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="bg-amber-500/10 rounded-full p-2 group-hover:bg-amber-500/20 transition-colors">
+                        <Lock className="w-4 h-4 text-amber-500" />
+                      </div>
+                      <div className="text-left flex-1">
+                        <p className="font-medium">Admin Sistema</p>
+                        <p className="text-xs text-muted-foreground">SuperAdmin - Configuración Total</p>
+                      </div>
+                    </div>
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => handleDemoLogin('maria.garcia@grupoprominente.com')}
                     className="w-full justify-start h-12 hover:bg-accent hover:border-primary/30 transition-all group"
                     disabled={isLoading}
@@ -210,7 +240,7 @@ export function Login({ onLogin }: LoginProps) {
                       </div>
                       <div className="text-left flex-1">
                         <p className="font-medium">Ana Rodríguez</p>
-                        <p className="text-xs text-muted-foreground">People & Culture - Admin</p>
+                        <p className="text-xs text-muted-foreground">People & Culture - Solo Reportes</p>
                       </div>
                     </div>
                   </Button>
@@ -220,7 +250,7 @@ export function Login({ onLogin }: LoginProps) {
               <div className="text-center text-xs text-muted-foreground pt-4 border-t">
                 <p>¿Necesitas ayuda? Contacta a 
                   <span className="text-primary ml-1 cursor-pointer hover:underline">
-                    people@grupoprominente.com
+                    {helpEmail}
                   </span>
                 </p>
               </div>

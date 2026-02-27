@@ -52,7 +52,7 @@ export default function App() {
 
   return (
     <>
-      {currentUser.role === 'people' ? (
+      {currentUser.role === 'people' || currentUser.role === 'superadmin' ? (
         <PeopleDashboard user={currentUser} onLogout={handleLogout} />
       ) : (
         <UserDashboard user={currentUser} onLogout={handleLogout} />

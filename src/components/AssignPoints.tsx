@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Category, PointAssignment } from '../types';
+import { User, PointAssignment } from '../types';
 import { storage, getCurrentMonth } from '../utils/storage';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -19,18 +19,7 @@ interface AssignPointsProps {
   onSuccess: () => void;
 }
 
-const CATEGORIES: Category[] = [
-  'Trabajo en equipo',
-  'Innovación',
-  'Liderazgo',
-  'Colaboración',
-  'Compromiso',
-  'Excelencia',
-  'Actitud positiva',
-  'Comunicación efectiva',
-];
-
-const CATEGORY_DESCRIPTIONS: Record<Category, string> = {
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Trabajo en equipo': 'Colabora efectivamente con sus compañeros',
   'Innovación': 'Propone ideas creativas y soluciones nuevas',
   'Liderazgo': 'Inspira y guía al equipo hacia el éxito',
@@ -46,12 +35,16 @@ export function AssignPoints({ currentUser, onClose, onSuccess }: AssignPointsPr
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [points, setPoints] = useState(1);
-  const [category, setCategory] = useState<Category | ''>('');
+  const [category, setCategory] = useState<string>('');
   const [message, setMessage] = useState('');
   const [availablePoints, setAvailablePoints] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Get enabled categories from system config
+  const systemConfig = storage.getSystemConfig();
+  const enabledCategories = systemConfig.categories.filter(cat => cat.enabled);
 
   useEffect(() => {
     const allUsers = storage.getUsers();
@@ -342,18 +335,18 @@ export function AssignPoints({ currentUser, onClose, onSuccess }: AssignPointsPr
                       </div>
                       
                       <Select value={category} onValueChange={(value) => {
-                        setCategory(value as Category);
+                        setCategory(value);
                         setErrors({});
                       }}>
                         <SelectTrigger id="category" className="h-11 sm:h-12">
                           <SelectValue placeholder="Selecciona un valor..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {CATEGORIES.map(cat => (
-                            <SelectItem key={cat} value={cat} className="py-3">
+                          {enabledCategories.map(cat => (
+                            <SelectItem key={cat.name} value={cat.name} className="py-3">
                               <div>
-                                <p className="font-medium text-sm sm:text-base">{cat}</p>
-                                <p className="text-xs text-muted-foreground hidden sm:block">{CATEGORY_DESCRIPTIONS[cat]}</p>
+                                <p className="font-medium text-sm sm:text-base">{cat.name}</p>
+                                <p className="text-xs text-muted-foreground hidden sm:block">{CATEGORY_DESCRIPTIONS[cat.name]}</p>
                               </div>
                             </SelectItem>
                           ))}

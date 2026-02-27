@@ -13,6 +13,7 @@ import { Award, Users, TrendingUp, Download, LogOut, BarChart3, Search, Filter, 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DashboardSkeleton } from './SkeletonLoader';
 import { MobileNav } from './MobileNav';
+import { AdminSettings } from './AdminSettings';
 import { motion } from 'motion/react';
 import { toast } from 'sonner@2.0.3';
 
@@ -324,6 +325,10 @@ export function PeopleDashboard({ user, onLogout }: PeopleDashboardProps) {
                   </TabsList>
                   
                   <div className="flex gap-2">
+                    {user.role === 'superadmin' && (
+                      <AdminSettings onUpdate={loadData} />
+                    )}
+                    
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button onClick={exportToCSV} variant="outline" size="sm">

@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
-import { Settings, Plus, X, RotateCcw, AlertTriangle, Info, Mail, FileText, Tag, BookOpen, Bell, Trash2, Server } from 'lucide-react';
+import { Settings, Plus, X, RotateCcw, AlertTriangle, Info, Mail, FileText, Tag, BookOpen, Bell, Trash2, Server, Search } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -30,6 +30,7 @@ export function AdminSettings({ onUpdate }: AdminSettingsProps) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [resetType, setResetType] = useState<'partial' | 'total'>('partial');
   const [newPeopleEmail, setNewPeopleEmail] = useState('');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
 
   const users = storage.getUsers().filter(u => u.role === 'employee');
   
@@ -235,6 +236,16 @@ export function AdminSettings({ onUpdate }: AdminSettingsProps) {
   };
 
   const enabledCount = config.categories.filter(cat => cat.enabled).length;
+
+  // Filter users based on search term
+  const filteredUsers = users.filter(user => {
+    const searchLower = userSearchTerm.toLowerCase();
+    return (
+      user.name.toLowerCase().includes(searchLower) ||
+      user.department.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -821,43 +832,61 @@ export function AdminSettings({ onUpdate }: AdminSettingsProps) {
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto p-2 border rounded-lg">
-                    {users.map(user => {
-                      const isSelected = selectedUsers.includes(user.id);
-                      const allocation = storage.getUserAllocation(user.id, getCurrentMonth());
-                      
-                      return (
-                        <div
-                          key={user.id}
-                          onClick={() => {
-                            setSelectedUsers(prev =>
-                              prev.includes(user.id)
-                                ? prev.filter(id => id !== user.id)
-                                : [...prev, user.id]
-                            );
-                          }}
-                          className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                            isSelected 
-                              ? 'bg-primary/10 border-primary' 
-                              : 'border-border hover:bg-accent'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">{user.name}</p>
-                              <p className="text-xs text-muted-foreground truncate">{user.department}</p>
-                            </div>
-                            <Badge variant={isSelected ? "default" : "outline"} className="ml-2">
-                              {allocation?.pointsReceived || 0} pts
-                            </Badge>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por nombre, departamento o email..."
+                      value={userSearchTerm}
+                      onChange={(e) => setUserSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
+
+                  {filteredUsers.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground border rounded-lg">
+                      <Search className="w-12 h-12 mx-auto mb-2 opacity-40" />
+                      <p>No se encontraron colaboradores</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto p-2 border rounded-lg">
+                      {filteredUsers.map(user => {
+                        const isSelected = selectedUsers.includes(user.id);
+                        const allocation = storage.getUserAllocation(user.id, getCurrentMonth());
+                        
+                        return (
+                          <div
+                            key={user.id}
+                            onClick={() => {
+                              setSelectedUsers(prev =>
+                                prev.includes(user.id)
+                                  ? prev.filter(id => id !== user.id)
+                                  : [...prev, user.id]
+                              );
+                            }}
+                            className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                              isSelected 
+                                ? 'bg-primary/10 border-primary' 
+                                : 'border-border hover:bg-accent'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate">{user.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{user.department}</p>
+                              </div>
+                              <Badge variant={isSelected ? "default" : "outline"} className="ml-2">
+                                {allocation?.pointsReceived || 0} pts
+                              </Badge>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   <p className="text-sm text-muted-foreground">
                     {selectedUsers.length} usuario(s) seleccionado(s)
+                    {userSearchTerm && ` de ${filteredUsers.length} filtrado(s)`}
                   </p>
                 </div>
 

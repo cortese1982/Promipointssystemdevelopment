@@ -1597,6 +1597,10 @@
     padding: calc(var(--spacing) * 6);
   }
 
+  .p-8 {
+    padding: calc(var(--spacing) * 8);
+  }
+
   .p-\[3px\] {
     padding: 3px;
   }
@@ -1849,6 +1853,10 @@
 
   .opacity-30 {
     opacity: .3;
+  }
+
+  .opacity-40 {
+    opacity: .4;
   }
 
   .opacity-50 {
